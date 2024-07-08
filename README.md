@@ -16,10 +16,10 @@ The big benefit is speed and efficiency. If you're a business dealing with tons 
 ![code_flow.png](info/code_flow.png)
 
 <p>
-<img src="info/img.png" alt="img.png" width="240"/>
-<img src="info/img_1.png" alt="img_1.png" width="216"/>
-<img src="info/img_2.png" alt="img_2.png" width="216"/>
-<img src="info/img_3.png" alt="img_3.png" width="216"/>
+<img src="info/img.png" alt="img.png" width="220"/>
+<img src="info/img_1.png" alt="img_1.png" width="197"/>
+<img src="info/img_2.png" alt="img_2.png" width="197"/>
+<img src="info/img_3.png" alt="img_3.png" width="197"/>
 </p>
 
 ### Postman collection - [FastDataSearch APIs](https://www.postman.com/lunar-module-geologist-7953428/workspace/fastdatasearch/collection/36590837-58db379f-3bcb-4277-8f20-dc39e89e8d7a)
