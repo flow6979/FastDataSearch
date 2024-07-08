@@ -4,6 +4,7 @@ import com.example.FastDataSearch.util.CSVUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -13,6 +14,11 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageImpl;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -95,22 +101,38 @@ public class DataIndexService {
         return List.of();
     }
 
-    public List<Map<String, Object>> queryDataset(String indexName, Map<String, String> queryParameters) {
+    public Map<String, Object> queryDataset(String indexName, Map<String, String> queryParameters,int page, int size) {
         // Build Criteria
         Criteria criteria = queryParameters.entrySet().stream()
+                .filter(entry -> !entry.getKey().equalsIgnoreCase("page") && !entry.getKey().equalsIgnoreCase("size"))
                 .map(entry -> Criteria.where(entry.getKey()).is(entry.getValue()))
                 .reduce(Criteria::and)
                 .orElse(new Criteria());
 
-        CriteriaQuery query = new CriteriaQuery(criteria);
+        Pageable pageable = PageRequest.of(page, size);
+        CriteriaQuery query = new CriteriaQuery(criteria).setPageable(pageable);
         System.out.println("LOG 8: Constructing query for index: " + indexName + " with criteria: " + criteria);
+        System.out.println("LOG 8: Page: " + page + ", Size: " + size);
 
-        List<Map<String, Object>> results = elasticsearchOperations.search(query, Map.class, IndexCoordinates.of(indexName))
+        // Execute the search query with pagination
+        SearchHits<Map> searchHits = elasticsearchOperations.search(query, Map.class, IndexCoordinates.of(indexName));
+        System.out.println("LOG 9: SearchHits: " + searchHits.getTotalHits() + " total hits");
+
+        List<Map<String, Object>> results = searchHits.getSearchHits()
                 .stream()
-                .map(searchHit -> (Map<String, Object>) searchHit.getContent())
+                .map(hit -> (Map<String, Object>) hit.getContent())
                 .collect(Collectors.toList());
 
-        System.out.println("LOG 9: Query executed successfully. Results count: " + results.size());
-        return results;
+        long totalHits = searchHits.getTotalHits();
+        Page<Map<String, Object>> resultsPage = new PageImpl<>(results, pageable, totalHits);
+
+        System.out.println("LOG 10: Query executed successfully. Results count: " + results.size());
+
+        return Map.of(
+                "results", results,
+                "currentPage", resultsPage.getNumber(),
+                "totalItems", resultsPage.getTotalElements(),
+                "totalPages", resultsPage.getTotalPages()
+        );
     }
 }

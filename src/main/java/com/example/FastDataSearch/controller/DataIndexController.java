@@ -41,8 +41,12 @@ public class DataIndexController {
     }
 
     @GetMapping("/{indexName}/search")
-    public ResponseEntity<Map<String, List<Map<String, Object>>>> queryDataset(@PathVariable String indexName, @RequestParam Map<String, String> queryParameters) {
-        List<Map<String, Object>> results = dataIndexService.queryDataset(indexName, queryParameters);
-        return ResponseEntity.ok(Map.of("results", results));
+    public ResponseEntity<Map<String, Object>> queryDataset(
+            @PathVariable String indexName,
+            @RequestParam Map<String, String> queryParameters,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Map<String, Object> results = dataIndexService.queryDataset(indexName, queryParameters, page, size);
+        return ResponseEntity.ok(results);
     }
 }
