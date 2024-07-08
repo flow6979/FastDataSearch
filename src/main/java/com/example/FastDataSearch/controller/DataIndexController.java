@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/index")
@@ -42,7 +43,14 @@ public class DataIndexController {
 
     @GetMapping("/{indexName}/search")
     public ResponseEntity<Map<String, List<Map<String, Object>>>> queryDataset(@PathVariable String indexName, @RequestParam Map<String, String> queryParameters) {
-        List<Map<String, Object>> results = dataIndexService.queryDataset(indexName, queryParameters);
+        // Convert comma-separated values into lists
+        Map<String, List<String>> parsedQueryParameters = queryParameters.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> List.of(e.getValue().split(","))
+                ));
+
+        List<Map<String, Object>> results = dataIndexService.queryDataset(indexName, parsedQueryParameters);
         return ResponseEntity.ok(Map.of("results", results));
     }
 }
