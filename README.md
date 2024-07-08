@@ -22,8 +22,11 @@ The big benefit is speed and efficiency. If you're a business dealing with tons 
 <img src="info/img_3.png" alt="img_3.png" width="197"/>
 </p>
 
+</br>
+
 ### Postman collection - [FastDataSearch APIs](https://www.postman.com/lunar-module-geologist-7953428/workspace/fastdatasearch/collection/36590837-58db379f-3bcb-4277-8f20-dc39e89e8d7a)
 
+</br>
 
 ## Installation 
 
