@@ -13,7 +13,23 @@ FastDataSearch is like a high-powered search engine for your big data collection
 The big benefit is speed and efficiency. If you're a business dealing with tons of data, FastDataSearch helps you find what you need without waiting around. It's like having a super-fast plus smart assistant that knows exactly where everything is in your massive digital filing cabinet.
 
 ## Code Flow
+![code_flow.png](info/code_flow.png)
+
+1. Ingest Data Flow Diagram
+
 ![img.png](info/img.png)
+
+2. List Datasets Flow Diagram
+
+![img_1.png](info/img_1.png)
+
+3. Get Columns Flow Diagram
+
+![img_2.png](info/img_2.png)
+
+4. Query Dataset Flow Diagram
+
+![img_3.png](info/img_3.png)
 
 ### Postman collection - [FastDataSearch APIs](https://www.postman.com/lunar-module-geologist-7953428/workspace/fastdatasearch/collection/36590837-58db379f-3bcb-4277-8f20-dc39e89e8d7a)
 

@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 public class DataIndexService {
@@ -35,6 +34,10 @@ public class DataIndexService {
 
         IndexOperations indexOps = elasticsearchOperations.indexOps(IndexCoordinates.of(indexName));
         indexOps.create();
+        // indexOps.delete();
+        // boolean exists = indexOps.exists();
+        // Document mapping = indexOps.getMapping(); // get the mapping of the index
+
         System.out.println("LOG 2: Created index: " + indexName);
 
         boolean hasMoreData = true;
@@ -81,7 +84,7 @@ public class DataIndexService {
         System.out.println("LOG 5: Retrieving mapping for index: " + indexName);
 
         if (!mapping.isEmpty()) {
-            Map<String, Object> properties = (Map<String, Object>) mapping.get("properties"); // properties -> map of column name, properties (name, age, etc with types)
+            Map<String, Object> properties = (Map<String, Object>) mapping.get("properties"); // properties -> map of {column name, field properties (name, age, etc with types) }
 
             System.out.println("LOG 6: Properties retrieved: " + properties.keySet());
 
