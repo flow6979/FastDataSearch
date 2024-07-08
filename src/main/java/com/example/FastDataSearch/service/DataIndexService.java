@@ -107,7 +107,8 @@ public class DataIndexService {
 
     public List<Map<String, Object>> queryDataset(String indexName, Map<String, String> queryParameters) {
         try {
-            Criteria criteria = queryParameters.entrySet().stream()
+            Criteria criteria = queryParameters.entrySet()
+                    .stream()
                     .map(entry -> Criteria.where(entry.getKey()).is(entry.getValue()))
                     .reduce(Criteria::and)
                     .orElse(new Criteria());
