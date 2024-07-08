@@ -186,3 +186,35 @@ curl -X GET 'http://localhost:8080/api/index/{indexName}/search?col1=abc&col2=xy
     ]
   }
   ```
+
+### 6. Delete all Indexes
+**Method:** `DELETE`  
+**Description:** delete all the indexes.
+
+**cURL Command:**
+```sh
+curl -X DELETE 'http://localhost:9200/_all'
+```
+
+**Response:**
+  ```json
+  {
+    "acknowledged": true
+  }
+  ```
+
+### 7. Delete specific Index
+**Method:** `DELETE`  
+**Description:** delete specific index from the cluster.
+
+**cURL Command:**
+```sh
+curl -X DELETE 'http://localhost:9200/{indexName}'
+```
+
+**Response:**
+  ```json
+  {
+    "acknowledged": true
+  }
+  ```
