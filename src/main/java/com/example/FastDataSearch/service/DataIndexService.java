@@ -23,8 +23,6 @@ public class DataIndexService {
     @Autowired
     private ElasticsearchOperations elasticsearchOperations;
 
-    private static final int CHUNK_SIZE = 10000;
-
     public String ingestData(MultipartFile file) {
         String indexName = "idx_" + System.currentTimeMillis();
 
@@ -34,14 +32,7 @@ public class DataIndexService {
 
             System.out.println("LOG S1: Created index: " + indexName);
 
-            boolean hasMoreData = true;
-
-            while (hasMoreData) {
-                List<Map<String, String>> data = CSVUtils.parseCSV(file, CHUNK_SIZE);
-                if (data.isEmpty()) {
-                    hasMoreData = false;
-                    continue;
-                }
+                List<Map<String, String>> data = CSVUtils.parseCSV(file);
 
                 System.out.println("LOG S2: Parsed " + data.size() + " records from CSV.");
 
@@ -52,10 +43,6 @@ public class DataIndexService {
                 elasticsearchOperations.bulkIndex(indexQueries, IndexCoordinates.of(indexName));
                 System.out.println("LOG S3: Bulk indexing completed for index: " + indexName);
 
-                if (data.size() < CHUNK_SIZE) {
-                    hasMoreData = false;
-                }
-            }
         } catch (Exception e) {
             System.err.println("Error during data ingestion: " + e.getMessage());
             return "Error during data ingestion.";
