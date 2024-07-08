@@ -42,7 +42,7 @@ public class CSVUtils {
                 }
             }
         } catch (Exception e) {
-            logger.error("Error parsing CSV file", e);
+            System.err.println("Error parsing CSV file: " + e);
             throw new RuntimeException("Failed to parse CSV file", e);
         }
         return data;
