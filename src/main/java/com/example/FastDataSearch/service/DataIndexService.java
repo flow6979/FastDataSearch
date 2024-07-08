@@ -64,6 +64,16 @@ public class DataIndexService {
         return indexName;
     }
 
+    public long getDatasetSize(String indexName) {
+        try {
+            CriteriaQuery query = new CriteriaQuery(new Criteria());
+            return elasticsearchOperations.count(query, IndexCoordinates.of(indexName));
+        } catch (Exception e) {
+            System.err.println("Error retrieving dataset size: " + e.getMessage());
+            return 0;
+        }
+    }
+
     public List<String> listDatasets() {
         try {
             IndexOperations indexOps = elasticsearchOperations.indexOps(IndexCoordinates.of(""));
