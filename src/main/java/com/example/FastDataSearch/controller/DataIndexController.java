@@ -62,7 +62,12 @@ public class DataIndexController {
             @RequestParam Map<String, String> queryParameters,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Map<String, Object> results = dataIndexService.queryDataset(indexName, queryParameters, page, size);
+        Map<String, List<String>> parsedQueryParameters = queryParameters.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> List.of(e.getValue().split(","))
+                ));
+        Map<String, Object> results =  dataIndexService.queryDataset(indexName, parsedQueryParameters,page,size);
         return ResponseEntity.ok(results);
     }
 }

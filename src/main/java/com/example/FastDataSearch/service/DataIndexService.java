@@ -102,11 +102,11 @@ public class DataIndexService {
         }
     }
 
-    public Map<String, Object> queryDataset(String indexName, Map<String, String> queryParameters,int page, int size) {
+    public Map<String, Object> queryDataset(String indexName, Map<String, List<String>> queryParameters,int page, int size) {
         // Build Criteria
         Criteria criteria = queryParameters.entrySet().stream()
                 .filter(entry -> !entry.getKey().equalsIgnoreCase("page") && !entry.getKey().equalsIgnoreCase("size"))
-                .map(entry -> Criteria.where(entry.getKey()).is(entry.getValue()))
+                .map(entry -> Criteria.where(entry.getKey()).in(entry.getValue()))
                 .reduce(Criteria::and)
                 .orElse(new Criteria());
 
@@ -128,6 +128,8 @@ public class DataIndexService {
         Page<Map<String, Object>> resultsPage = new PageImpl<>(results, pageable, totalHits);
 
         System.out.println("LOG 10: Query executed successfully. Results count: " + results.size());
+
+        //return results;
 
         return Map.of(
                 "results", results,
