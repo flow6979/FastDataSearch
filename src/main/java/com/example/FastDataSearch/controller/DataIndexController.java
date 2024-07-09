@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/index")
@@ -17,7 +18,7 @@ public class DataIndexController {
     private DataIndexService dataIndexService;
 
     @PostMapping
-    public ResponseEntity<Map<String, String>> ingestData(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Map<String, Object>> ingestData(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "File is empty"));
         }
@@ -25,19 +26,34 @@ public class DataIndexController {
         System.out.println("LOG C1: Received file: " + file.getOriginalFilename() + ", size: " + file.getSize());
 
         String indexName = dataIndexService.ingestData(file);
-        return ResponseEntity.ok(Map.of("message", "Data ingested successfully", "index", indexName));
+        long datasetSize = dataIndexService.getDatasetSize(indexName); // Assuming you have this method in service to get dataset size
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Data ingested successfully",
+                "index", indexName,
+                "dataset size", datasetSize
+        ));
     }
 
     @GetMapping
-    public ResponseEntity<Map<String, List<String>>> listDatasets() {
+    public ResponseEntity<Map<String, Object>> listDatasets() {
         List<String> datasets = dataIndexService.listDatasets();
-        return ResponseEntity.ok(Map.of("datasets", datasets));
+        return ResponseEntity.ok(Map.of(
+                "meta data", Map.of("dataset count", datasets.size()),
+                "datasets", datasets
+        ));
     }
 
     @GetMapping("/{indexName}")
-    public ResponseEntity<Map<String, List<String>>> showColumns(@PathVariable String indexName) {
+    public ResponseEntity<Map<String, Object>> showColumns(@PathVariable String indexName) {
         List<String> columns = dataIndexService.getColumns(indexName);
-        return ResponseEntity.ok(Map.of("columns", columns));
+        return ResponseEntity.ok(Map.of(
+                "meta data", Map.of(
+                        "index", indexName,
+                        "Total columns", columns.size()
+                ),
+                "columns", columns
+        ));
     }
 
     @GetMapping("/{indexName}/search")

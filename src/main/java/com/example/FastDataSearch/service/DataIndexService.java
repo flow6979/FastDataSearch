@@ -4,7 +4,6 @@ import com.example.FastDataSearch.util.CSVUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
-import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -13,17 +12,13 @@ import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.stereotype.Service;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageImpl;
-
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,73 +27,79 @@ public class DataIndexService {
     @Autowired
     private ElasticsearchOperations elasticsearchOperations;
 
-    // streaming approach to process the CSV data in chunks rather than loading the entire file into memory at once
-    private static final int CHUNK_SIZE = 10000; // Adjust chunk size as needed
-
     public String ingestData(MultipartFile file) {
         String indexName = "idx_" + System.currentTimeMillis();
 
-        IndexOperations indexOps = elasticsearchOperations.indexOps(IndexCoordinates.of(indexName));
-        indexOps.create();
-        // indexOps.delete();
-        // boolean exists = indexOps.exists();
-        // Document mapping = indexOps.getMapping(); // get the mapping of the index
+        try {
+            IndexOperations indexOps = elasticsearchOperations.indexOps(IndexCoordinates.of(indexName));
+            indexOps.create();
 
-        System.out.println("LOG 2: Created index: " + indexName);
+            System.out.println("LOG S1: Created index: " + indexName);
 
-        boolean hasMoreData = true;
+                List<Map<String, String>> data = CSVUtils.parseCSV(file);
 
-        while (hasMoreData) {
-            List<Map<String, String>> data = CSVUtils.parseCSV(file, CHUNK_SIZE);
-            if (data.isEmpty()) {
-                hasMoreData = false;
-                continue;
-            }
+                System.out.println("LOG S2: Parsed " + data.size() + " records from CSV.");
 
-            System.out.println("LOG 1: Parsed " + data.size() + " records from CSV.");
+                List<IndexQuery> indexQueries = data.stream()
+                        .map(record -> new IndexQueryBuilder().withObject(record).build())
+                        .collect(Collectors.toList());
 
-            List<IndexQuery> indexQueries = data.stream()
-                    .map(record -> new IndexQueryBuilder().withObject(record).build())
-                    .collect(Collectors.toList());
+                elasticsearchOperations.bulkIndex(indexQueries, IndexCoordinates.of(indexName));
+                System.out.println("LOG S3: Bulk indexing completed for index: " + indexName);
 
-            elasticsearchOperations.bulkIndex(indexQueries, IndexCoordinates.of(indexName));
-            System.out.println("LOG 3: Bulk indexing completed for index: " + indexName);
-
-            if (data.size() < CHUNK_SIZE) {
-                hasMoreData = false;
-            }
+        } catch (Exception e) {
+            System.err.println("Error during data ingestion: " + e.getMessage());
+            return "Error during data ingestion.";
         }
 
         return indexName;
     }
 
-    public List<String> listDatasets() {
-        IndexOperations indexOps = elasticsearchOperations.indexOps(IndexCoordinates.of("")); // Initializing IndexOperations with an empty index coordinate to target the entire cluster.
-        Map<String, Set<AliasData>> aliases = indexOps.getAliases(); // <alias, index names>
-
-        System.out.println("LOG 4: Aliases retrieved: " + aliases.keySet());
-
-        return new ArrayList<>(aliases.keySet());
+    public long getDatasetSize(String indexName) {
+        try {
+            CriteriaQuery query = new CriteriaQuery(new Criteria());
+            return elasticsearchOperations.count(query, IndexCoordinates.of(indexName));
+        } catch (Exception e) {
+            System.err.println("Error retrieving dataset size: " + e.getMessage());
+            return 0;
+        }
     }
 
+    public List<String> listDatasets() {
+        try {
+            IndexOperations indexOps = elasticsearchOperations.indexOps(IndexCoordinates.of(""));
+            Map<String, Set<AliasData>> aliases = indexOps.getAliases();
+
+            System.out.println("LOG S4: Aliases retrieved: " + aliases.keySet());
+
+            return new ArrayList<>(aliases.keySet());
+        } catch (Exception e) {
+            System.err.println("Error retrieving datasets: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
 
     public List<String> getColumns(String indexName) {
-        // Using mapping to get columns
-        IndexOperations indexOps = elasticsearchOperations.indexOps(IndexCoordinates.of(indexName));
-        Document mapping = (Document) indexOps.getMapping(); // doc of specific mapping
+        try {
+            IndexOperations indexOps = elasticsearchOperations.indexOps(IndexCoordinates.of(indexName));
+            Document mapping = (Document) indexOps.getMapping();
 
-        System.out.println("LOG 5: Retrieving mapping for index: " + indexName);
+            System.out.println("LOG S5: Retrieving mapping for index: " + indexName);
 
-        if (!mapping.isEmpty()) {
-            Map<String, Object> properties = (Map<String, Object>) mapping.get("properties"); // properties -> map of {column name, field properties (name, age, etc with types) }
+            if (!mapping.isEmpty()) {
+                Map<String, Object> properties = (Map<String, Object>) mapping.get("properties");
 
-            System.out.println("LOG 6: Properties retrieved: " + properties.keySet());
+                System.out.println("LOG S6: Properties retrieved: " + properties.keySet());
 
-            return new ArrayList<>(properties.keySet());
+                return new ArrayList<>(properties.keySet());
+            }
+
+            System.out.println("LOG S7: No properties found for index: " + indexName);
+            return List.of();
+        } catch (Exception e) {
+            System.err.println("Error retrieving columns: " + e.getMessage());
+            return List.of();
         }
-
-        System.out.println("LOG 7: No properties found for index: " + indexName);
-        return List.of();
     }
 
     public Map<String, Object> queryDataset(String indexName, Map<String, String> queryParameters,int page, int size) {

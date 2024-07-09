@@ -15,7 +15,7 @@ public class CSVUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(CSVUtils.class);
 
-    public static List<Map<String, String>> parseCSV(MultipartFile file, int chunkSize) {
+    public static List<Map<String, String>> parseCSV(MultipartFile file) {
         List<Map<String, String>> data = new ArrayList<>();
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
@@ -27,22 +27,19 @@ public class CSVUtils {
                 int count = 0;
 
                 while ((line = br.readLine()) != null) {
-                    String[] values = line.split(",");
+                    String[] values = line.split(",", -1);
                     Map<String, String> row = new HashMap<>();
 
                     for (int i = 0; i < headers.length; i++) {
-                        row.put(headers[i], values[i]);
+                        row.put(headers[i], i < values.length ? values[i] : "");
                     }
                     data.add(row);
                     count++;
 
-                    if (count >= chunkSize) {
-                        break;
-                    }
                 }
             }
         } catch (Exception e) {
-            logger.error("Error parsing CSV file", e);
+            System.err.println("Error parsing CSV file: " + e);
             throw new RuntimeException("Failed to parse CSV file", e);
         }
         return data;
