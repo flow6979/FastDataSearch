@@ -57,21 +57,17 @@ public class DataIndexController {
     }
 
     @GetMapping("/{indexName}/search")
-    public ResponseEntity<Map<String, Object>> queryDataset(@PathVariable String indexName, @RequestParam Map<String, String> queryParameters) {
-        // Convert comma-separated values into lists
+    public ResponseEntity<Map<String, Object>> queryDataset(
+            @PathVariable String indexName,
+            @RequestParam Map<String, String> queryParameters,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         Map<String, List<String>> parsedQueryParameters = queryParameters.entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         e -> List.of(e.getValue().split(","))
                 ));
-
-        List<Map<String, Object>> results = dataIndexService.queryDataset(indexName, parsedQueryParameters);
-        return ResponseEntity.ok(Map.of(
-                "meta data", Map.of(
-                        "index", indexName,
-                        "Total results", results.size()
-                ),
-                "results", results
-        ));
+        Map<String, Object> results =  dataIndexService.queryDataset(indexName, parsedQueryParameters,page,size);
+        return ResponseEntity.ok(results);
     }
 }
