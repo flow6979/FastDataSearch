@@ -112,9 +112,10 @@ public class DataIndexService {
 
         // Execute the search query to get total hits without pagination
         CriteriaQuery countQuery = new CriteriaQuery(criteria);
-        long totalHits = elasticsearchOperations.count(countQuery, IndexCoordinates.of(indexName));
+        long totalHits = Math.min(elasticsearchOperations.count(countQuery, IndexCoordinates.of(indexName)), 10000);
 
-        int totalPages = (int) Math.ceil((double) totalHits / size);
+        int totalPages = (int) Math.floor((double) totalHits / size);
+        if(totalHits == 10000) totalPages = 33;
 
         if (page >= totalPages) {
             return Map.of(
@@ -143,10 +144,12 @@ public class DataIndexService {
         System.out.println("LOG 10: Query executed successfully. Results count: " + results.size());
 
         return Map.of(
-                "results", results,
-                "currentPage", resultsPage.getNumber(),
-                "totalItems", resultsPage.getTotalElements(),
-                "totalPages", resultsPage.getTotalPages()
+                "meta data",Map.of(
+                        "currentPage", resultsPage.getNumber(),
+                        "totalItems", resultsPage.getTotalElements(),
+                        "totalPages", totalPages
+                ),
+                "results", results
         );
     }
 }
