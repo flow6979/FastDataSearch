@@ -61,7 +61,7 @@ public class DataIndexController {
             @PathVariable String indexName,
             @RequestParam Map<String, String> queryParameters,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "100") int size) {
         Map<String, List<String>> parsedQueryParameters = queryParameters.entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,

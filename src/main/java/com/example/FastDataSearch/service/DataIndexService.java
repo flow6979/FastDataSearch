@@ -102,34 +102,45 @@ public class DataIndexService {
         }
     }
 
-    public Map<String, Object> queryDataset(String indexName, Map<String, List<String>> queryParameters,int page, int size) {
-        // Build Criteria
+    public Map<String, Object> queryDataset(String indexName, Map<String, List<String>> queryParameters, int page, int size) {
+
         Criteria criteria = queryParameters.entrySet().stream()
                 .filter(entry -> !entry.getKey().equalsIgnoreCase("page") && !entry.getKey().equalsIgnoreCase("size"))
                 .map(entry -> Criteria.where(entry.getKey()).in(entry.getValue()))
                 .reduce(Criteria::and)
                 .orElse(new Criteria());
 
+        // Execute the search query to get total hits without pagination
+        CriteriaQuery countQuery = new CriteriaQuery(criteria);
+        long totalHits = elasticsearchOperations.count(countQuery, IndexCoordinates.of(indexName));
+
+        int totalPages = (int) Math.ceil((double) totalHits / size);
+
+        if (page >= totalPages) {
+            return Map.of(
+                    "message", "Page number out of range",
+                    "totalPages", totalPages,
+                    "totalItems", totalHits
+            );
+        }
+
         Pageable pageable = PageRequest.of(page, size);
         CriteriaQuery query = new CriteriaQuery(criteria).setPageable(pageable);
         System.out.println("LOG 8: Constructing query for index: " + indexName + " with criteria: " + criteria);
-        System.out.println("LOG 8: Page: " + page + ", Size: " + size);
+        System.out.println("LOG 9: Page: " + page + ", Size: " + size);
 
-        // Execute the search query with pagination
+        // Executing the search query with pagination
         SearchHits<Map> searchHits = elasticsearchOperations.search(query, Map.class, IndexCoordinates.of(indexName));
-        System.out.println("LOG 9: SearchHits: " + searchHits.getTotalHits() + " total hits");
+        System.out.println("LOG 10: SearchHits: " + searchHits.getTotalHits() + " total hits");
 
         List<Map<String, Object>> results = searchHits.getSearchHits()
                 .stream()
                 .map(hit -> (Map<String, Object>) hit.getContent())
                 .collect(Collectors.toList());
 
-        long totalHits = searchHits.getTotalHits();
         Page<Map<String, Object>> resultsPage = new PageImpl<>(results, pageable, totalHits);
 
         System.out.println("LOG 10: Query executed successfully. Results count: " + results.size());
-
-        //return results;
 
         return Map.of(
                 "results", results,
