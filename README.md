@@ -19,7 +19,7 @@ The big benefit is speed and efficiency. If you're a business dealing with tons 
 <img src="info/img.png" alt="img.png" width="220"/>
 <img src="info/img_1.png" alt="img_1.png" width="197"/>
 <img src="info/img_2.png" alt="img_2.png" width="197"/>
-<img src="info/img_3.png" alt="img_3.png" width="197"/>
+<img src="info/img_4.png" alt="img_3.png" width="197"/>
 </p>
 
 </br>
